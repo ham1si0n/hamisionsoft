@@ -610,6 +610,65 @@ function GUI:AddWindow(title, options)
             return dropdown
         end
 
+        function tab:AddKeybind(text, default, callback)
+            local frame = Instance.new("Frame")
+            frame.Size = UDim2.new(1,-10,0,40)
+            frame.Position = UDim2.new(0,5,0,0)
+            frame.BackgroundColor3 = C.BackgroundLight
+            frame.BackgroundTransparency = 0.5
+            frame.BorderSizePixel = 0
+            frame.Parent = tabContent
+            Instance.new("UICorner", frame).CornerRadius = UDim.new(0,8)
+
+            local label = Instance.new("TextLabel")
+            label.Size = UDim2.new(0.6,0,1,0)
+            label.Position = UDim2.new(0,10,0,0)
+            label.BackgroundTransparency = 1
+            label.Text = text
+            label.TextColor3 = C.Text
+            label.TextSize = 11
+            label.Font = Enum.Font.Arcade
+            label.TextXAlignment = Enum.TextXAlignment.Left
+            label.Parent = frame
+
+            local keyBtn = Instance.new("TextButton")
+            keyBtn.Size = UDim2.new(0,80,0,26)
+            keyBtn.Position = UDim2.new(1,-90,0.5,-13)
+            keyBtn.BackgroundColor3 = C.BackgroundMid
+            keyBtn.BackgroundTransparency = 0.3
+            keyBtn.Text = default and default.Name or "NONE"
+            keyBtn.TextColor3 = C.Text
+            keyBtn.TextSize = 10
+            keyBtn.Font = Enum.Font.Arcade
+            keyBtn.BorderSizePixel = 0
+            keyBtn.Parent = frame
+            Instance.new("UICorner", keyBtn).CornerRadius = UDim.new(0,5)
+
+            local waiting = false
+            keyBtn.MouseButton1Click:Connect(function()
+                if waiting then return end
+                waiting = true
+                keyBtn.Text = "..."
+                keyBtn.BackgroundColor3 = C.Orange
+                local conn
+                conn = UserInputService.InputBegan:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.Keyboard then
+                        local key = input.KeyCode
+                        keyBtn.Text = key.Name
+                        keyBtn.BackgroundColor3 = C.Green
+                        callback(key)
+                        waiting = false
+                        conn:Disconnect()
+                    end
+                end)
+            end)
+
+            return keyBtn, function(key)
+                keyBtn.Text = key and key.Name or "NONE"
+                keyBtn.BackgroundColor3 = C.Green
+            end
+        end
+
         return tab
     end
 
