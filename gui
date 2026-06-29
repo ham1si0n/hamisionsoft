@@ -1,0 +1,619 @@
+-- =====================================================
+--  Hamision GUI – автономная библиотека
+--  Версия 4.5.3.6 (только UI, без игровой логики)
+-- =====================================================
+
+local GUI = {}
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local CoreGui = game:GetService("CoreGui")
+
+-- === ТЕМЫ ===
+local Themes = {
+    Grey = {
+        Background = Color3.fromRGB(30,30,35),
+        BackgroundLight = Color3.fromRGB(45,45,50),
+        BackgroundMid = Color3.fromRGB(38,38,43),
+        Accent = Color3.fromRGB(110,110,120),
+        AccentLight = Color3.fromRGB(150,150,160),
+        AccentDark = Color3.fromRGB(70,70,80),
+        Text = Color3.fromRGB(230,230,240),
+        TextDim = Color3.fromRGB(160,160,170),
+        Green = Color3.fromRGB(100,220,140),
+        Red = Color3.fromRGB(220,80,100),
+        Orange = Color3.fromRGB(220,160,80),
+        Purple = Color3.fromRGB(160,100,220),
+        CloseBtn = Color3.fromRGB(200,70,90),
+        Yellow = Color3.fromRGB(220,200,100),
+        Glow = Color3.fromRGB(180,140,220),
+        Cyan = Color3.fromRGB(100,180,220),
+        Pink = Color3.fromRGB(220,120,180),
+        White = Color3.fromRGB(255,255,255),
+        Snow1 = Color3.fromRGB(200,200,210),
+        Snow2 = Color3.fromRGB(180,180,190),
+        Snow3 = Color3.fromRGB(220,220,230),
+        DashColor = Color3.fromRGB(130,130,140),
+    },
+    Purple = {
+        Background = Color3.fromRGB(12,8,18),
+        BackgroundLight = Color3.fromRGB(28,20,38),
+        BackgroundMid = Color3.fromRGB(20,14,28),
+        Accent = Color3.fromRGB(140,100,180),
+        AccentLight = Color3.fromRGB(180,140,220),
+        AccentDark = Color3.fromRGB(100,70,140),
+        Text = Color3.fromRGB(240,235,250),
+        TextDim = Color3.fromRGB(140,130,160),
+        Green = Color3.fromRGB(100,220,140),
+        Red = Color3.fromRGB(220,80,100),
+        Orange = Color3.fromRGB(220,160,80),
+        Purple = Color3.fromRGB(160,100,220),
+        CloseBtn = Color3.fromRGB(200,70,90),
+        Yellow = Color3.fromRGB(220,200,100),
+        Glow = Color3.fromRGB(180,140,220),
+        Cyan = Color3.fromRGB(100,180,220),
+        Pink = Color3.fromRGB(220,120,180),
+        White = Color3.fromRGB(255,255,255),
+        Snow1 = Color3.fromRGB(220,210,240),
+        Snow2 = Color3.fromRGB(200,190,230),
+        Snow3 = Color3.fromRGB(255,250,255),
+        DashColor = Color3.fromRGB(140,100,180),
+    },
+    -- Остальные темы (RedDevil, OceanBlue, MatrixGreen, Gold, Midnight, Sunset, Forest, Ice)
+    -- можно добавить позже, они не обязательны для работы.
+}
+
+local C = Themes.Grey
+function GUI.SetTheme(name)
+    if Themes[name] then C = Themes[name] end
+end
+
+-- === ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ===
+local function CreateDashedBorder(parent)
+    local dashContainer = Instance.new("Frame")
+    dashContainer.Size = UDim2.new(1,-4,1,-4)
+    dashContainer.Position = UDim2.new(0,2,0,2)
+    dashContainer.BackgroundTransparency = 1
+    dashContainer.BorderSizePixel = 0
+    dashContainer.ZIndex = 10
+    dashContainer.ClipsDescendants = false
+    dashContainer.Parent = parent
+    local dashes = {}
+    local dashLen = 8
+    local gapLen = 5
+    local thick = 2
+    for i=0,50 do
+        local d = Instance.new("Frame")
+        d.Size = UDim2.new(0,dashLen,0,thick)
+        d.Position = UDim2.new(0,i*(dashLen+gapLen),0,-1)
+        d.BackgroundColor3 = C.DashColor
+        d.BackgroundTransparency = 0.3
+        d.BorderSizePixel = 0
+        d.ZIndex = 11
+        d.Parent = dashContainer
+        table.insert(dashes, d)
+    end
+    for i=0,50 do
+        local d = Instance.new("Frame")
+        d.Size = UDim2.new(0,dashLen,0,thick)
+        d.Position = UDim2.new(0,i*(dashLen+gapLen),1,-1)
+        d.BackgroundColor3 = C.DashColor
+        d.BackgroundTransparency = 0.3
+        d.BorderSizePixel = 0
+        d.ZIndex = 11
+        d.Parent = dashContainer
+        table.insert(dashes, d)
+    end
+    for i=0,50 do
+        local d = Instance.new("Frame")
+        d.Size = UDim2.new(0,thick,0,dashLen)
+        d.Position = UDim2.new(0,-1,0,i*(dashLen+gapLen))
+        d.BackgroundColor3 = C.DashColor
+        d.BackgroundTransparency = 0.3
+        d.BorderSizePixel = 0
+        d.ZIndex = 11
+        d.Parent = dashContainer
+        table.insert(dashes, d)
+    end
+    for i=0,50 do
+        local d = Instance.new("Frame")
+        d.Size = UDim2.new(0,thick,0,dashLen)
+        d.Position = UDim2.new(1,-1,0,i*(dashLen+gapLen))
+        d.BackgroundColor3 = C.DashColor
+        d.BackgroundTransparency = 0.3
+        d.BorderSizePixel = 0
+        d.ZIndex = 11
+        d.Parent = dashContainer
+        table.insert(dashes, d)
+    end
+    return dashContainer, dashes
+end
+
+local function CreateStarfield(parent, count)
+    count = count or 60
+    for i=1,count do
+        local star = Instance.new("Frame")
+        star.Size = UDim2.new(0,math.random(2,5),0,math.random(2,5))
+        star.Position = UDim2.new(math.random(0,100)/100,0,math.random(0,100)/100,0)
+        star.BackgroundColor3 = Color3.fromRGB(255,255,255)
+        star.BackgroundTransparency = 0.8
+        star.BorderSizePixel = 0
+        star.ZIndex = 0
+        star.Parent = parent
+        Instance.new("UICorner", star).CornerRadius = UDim.new(1,0)
+        task.spawn(function()
+            while star and star.Parent do
+                local duration = math.random(2,6)
+                local targetTrans = math.random(3,8)/10
+                TweenService:Create(star, TweenInfo.new(duration, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+                    BackgroundTransparency = targetTrans,
+                    Size = UDim2.new(0,math.random(2,5),0,math.random(2,5))
+                }):Play()
+                task.wait(duration)
+                TweenService:Create(star, TweenInfo.new(duration, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+                    BackgroundTransparency = 0.8,
+                    Size = UDim2.new(0,math.random(2,5),0,math.random(2,5))
+                }):Play()
+                task.wait(duration)
+            end
+        end)
+    end
+end
+
+local function MakeDraggable(handle, target)
+    local drag, dragStart, startPos = false, nil, nil
+    handle.InputBegan:Connect(function(i)
+        if i.UserInputType == Enum.UserInputType.MouseButton1 then
+            drag = true
+            dragStart = i.Position
+            startPos = target.Position
+        end
+    end)
+    handle.InputEnded:Connect(function(i)
+        if i.UserInputType == Enum.UserInputType.MouseButton1 then
+            drag = false
+        end
+    end)
+    UserInputService.InputChanged:Connect(function(i)
+        if drag and i.UserInputType == Enum.UserInputType.MouseMovement then
+            local delta = i.Position - dragStart
+            target.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X,
+                                        startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+end
+
+-- === ГЛАВНАЯ ФУНКЦИЯ СОЗДАНИЯ ОКНА ===
+function GUI:AddWindow(title, options)
+    options = options or {}
+    local mainColor = options.main_color or C.Background
+    local minSize = options.min_size or Vector2.new(320, 560)
+
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "HamisionGUI"
+    screenGui.ResetOnSpawn = false
+    screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    screenGui.DisplayOrder = 999
+    pcall(function() screenGui.Parent = CoreGui end)
+    if not screenGui.Parent then
+        screenGui.Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+    end
+
+    local container = Instance.new("Frame")
+    container.Size = UDim2.new(0, minSize.X, 0, minSize.Y)
+    container.Position = UDim2.new(0.5, -minSize.X/2, 0.5, -minSize.Y/2)
+    container.BackgroundTransparency = 1
+    container.Parent = screenGui
+
+    local glass = Instance.new("Frame")
+    glass.Size = UDim2.new(1,0,1,0)
+    glass.BackgroundColor3 = mainColor
+    glass.BackgroundTransparency = 0.25
+    glass.BorderSizePixel = 0
+    glass.ClipsDescendants = true
+    glass.Parent = container
+    Instance.new("UICorner", glass).CornerRadius = UDim.new(0,16)
+    local stroke = Instance.new("UIStroke")
+    stroke.Color = C.DashColor
+    stroke.Thickness = 2
+    stroke.Transparency = 0.3
+    stroke.Parent = glass
+
+    local starC = Instance.new("Frame")
+    starC.Size = UDim2.new(1,0,1,0)
+    starC.BackgroundTransparency = 1
+    starC.ClipsDescendants = true
+    starC.Parent = glass
+    Instance.new("UICorner", starC).CornerRadius = UDim.new(0,16)
+    CreateStarfield(starC, 40)
+
+    local overlay = Instance.new("Frame")
+    overlay.Size = UDim2.new(1,0,1,0)
+    overlay.BackgroundColor3 = mainColor
+    overlay.BackgroundTransparency = 0.8
+    overlay.BorderSizePixel = 0
+    overlay.Parent = glass
+    Instance.new("UICorner", overlay).CornerRadius = UDim.new(0,16)
+
+    local dashClip = Instance.new("Frame")
+    dashClip.Size = UDim2.new(1,0,1,0)
+    dashClip.BackgroundTransparency = 1
+    dashClip.BorderSizePixel = 0
+    dashClip.ClipsDescendants = true
+    dashClip.Parent = glass
+    Instance.new("UICorner", dashClip).CornerRadius = UDim.new(0,16)
+    CreateDashedBorder(dashClip)
+
+    -- Заголовок
+    local header = Instance.new("Frame")
+    header.Size = UDim2.new(1,0,0,50)
+    header.BackgroundColor3 = C.BackgroundLight
+    header.BackgroundTransparency = 0.4
+    header.BorderSizePixel = 0
+    header.Parent = glass
+    Instance.new("UICorner", header).CornerRadius = UDim.new(0,16)
+
+    local titleLbl = Instance.new("TextLabel")
+    titleLbl.Size = UDim2.new(0.8,0,1,0)
+    titleLbl.Position = UDim2.new(0,14,0,0)
+    titleLbl.BackgroundTransparency = 1
+    titleLbl.Text = title
+    titleLbl.TextColor3 = C.Text
+    titleLbl.TextSize = 14
+    titleLbl.Font = Enum.Font.Arcade
+    titleLbl.TextXAlignment = Enum.TextXAlignment.Left
+    titleLbl.Parent = header
+
+    local closeBtn = Instance.new("TextButton")
+    closeBtn.Size = UDim2.new(0,32,0,32)
+    closeBtn.Position = UDim2.new(1,-42,0.5,-16)
+    closeBtn.BackgroundColor3 = C.CloseBtn
+    closeBtn.Text = "X"
+    closeBtn.TextColor3 = C.Text
+    closeBtn.TextSize = 16
+    closeBtn.Font = Enum.Font.GothamBold
+    closeBtn.BorderSizePixel = 0
+    closeBtn.Parent = header
+    Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0,8)
+    closeBtn.MouseButton1Click:Connect(function()
+        screenGui:Destroy()
+    end)
+
+    MakeDraggable(header, container)
+
+    -- Контейнер для вкладок
+    local tabContainer = Instance.new("Frame")
+    tabContainer.Size = UDim2.new(1,-16,1,-62)
+    tabContainer.Position = UDim2.new(0,8,0,58)
+    tabContainer.BackgroundTransparency = 1
+    tabContainer.Parent = glass
+
+    local tabLayout = Instance.new("UIListLayout")
+    tabLayout.Padding = UDim.new(0,6)
+    tabLayout.FillDirection = Enum.FillDirection.Horizontal
+    tabLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    tabLayout.VerticalAlignment = Enum.VerticalAlignment.Top
+    tabLayout.Parent = tabContainer
+
+    local contentContainer = Instance.new("Frame")
+    contentContainer.Size = UDim2.new(1,0,1,-36)
+    contentContainer.Position = UDim2.new(0,0,0,36)
+    contentContainer.BackgroundTransparency = 1
+    contentContainer.Parent = glass
+
+    local currentTab
+
+    local window = {}
+
+    function window:AddTab(name)
+        local btn = Instance.new("TextButton")
+        btn.Size = UDim2.new(0,90,0,30)
+        btn.BackgroundColor3 = C.BackgroundMid
+        btn.BackgroundTransparency = 0.4
+        btn.Text = name
+        btn.TextColor3 = C.Text
+        btn.TextSize = 11
+        btn.Font = Enum.Font.Arcade
+        btn.BorderSizePixel = 0
+        btn.Parent = tabContainer
+        Instance.new("UICorner", btn).CornerRadius = UDim.new(0,6)
+
+        local tabContent = Instance.new("ScrollingFrame")
+        tabContent.Size = UDim2.new(1,0,1,0)
+        tabContent.BackgroundTransparency = 1
+        tabContent.BorderSizePixel = 0
+        tabContent.ScrollBarThickness = 4
+        tabContent.ScrollBarImageColor3 = C.DashColor
+        tabContent.ScrollBarImageTransparency = 0.3
+        tabContent.CanvasSize = UDim2.new(0,0,0,0)
+        tabContent.Visible = false
+        tabContent.Parent = contentContainer
+
+        local contentLayout = Instance.new("UIListLayout")
+        contentLayout.Padding = UDim.new(0,6)
+        contentLayout.Parent = tabContent
+        contentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+            tabContent.CanvasSize = UDim2.new(0,0,0, contentLayout.AbsoluteContentSize.Y + 10)
+        end)
+
+        btn.MouseButton1Click:Connect(function()
+            if currentTab then
+                currentTab.Content.Visible = false
+                currentTab.Button.BackgroundColor3 = C.BackgroundMid
+            end
+            tabContent.Visible = true
+            btn.BackgroundColor3 = C.Accent
+            currentTab = { Content = tabContent, Button = btn }
+        end)
+
+        if not currentTab then
+            tabContent.Visible = true
+            btn.BackgroundColor3 = C.Accent
+            currentTab = { Content = tabContent, Button = btn }
+        end
+
+        local tab = {}
+
+        function tab:AddButton(text, callback)
+            local btn = Instance.new("TextButton")
+            btn.Size = UDim2.new(1,-10,0,36)
+            btn.Position = UDim2.new(0,5,0,0)
+            btn.BackgroundColor3 = C.BackgroundLight
+            btn.BackgroundTransparency = 0.5
+            btn.Text = text
+            btn.TextColor3 = C.Text
+            btn.TextSize = 11
+            btn.Font = Enum.Font.Arcade
+            btn.BorderSizePixel = 0
+            btn.Parent = tabContent
+            Instance.new("UICorner", btn).CornerRadius = UDim.new(0,8)
+            btn.MouseButton1Click:Connect(callback)
+            return btn
+        end
+
+        function tab:AddToggle(text, default, callback)
+            local frame = Instance.new("Frame")
+            frame.Size = UDim2.new(1,-10,0,40)
+            frame.Position = UDim2.new(0,5,0,0)
+            frame.BackgroundColor3 = C.BackgroundLight
+            frame.BackgroundTransparency = 0.5
+            frame.BorderSizePixel = 0
+            frame.Parent = tabContent
+            Instance.new("UICorner", frame).CornerRadius = UDim.new(0,8)
+
+            local label = Instance.new("TextLabel")
+            label.Size = UDim2.new(0.7,0,1,0)
+            label.Position = UDim2.new(0,10,0,0)
+            label.BackgroundTransparency = 1
+            label.Text = text
+            label.TextColor3 = C.Text
+            label.TextSize = 11
+            label.Font = Enum.Font.Arcade
+            label.TextXAlignment = Enum.TextXAlignment.Left
+            label.Parent = frame
+
+            local bg = Instance.new("Frame")
+            bg.Size = UDim2.new(0,40,0,20)
+            bg.Position = UDim2.new(1,-50,0.5,-10)
+            bg.BackgroundColor3 = default and C.Green or C.BackgroundMid
+            bg.BorderSizePixel = 0
+            bg.Parent = frame
+            Instance.new("UICorner", bg).CornerRadius = UDim.new(0,4)
+
+            local knob = Instance.new("Frame")
+            knob.Size = UDim2.new(0,14,0,14)
+            knob.Position = default and UDim2.new(1,-17,0.5,-7) or UDim2.new(0,3,0.5,-7)
+            knob.BackgroundColor3 = C.Text
+            knob.BorderSizePixel = 0
+            knob.Parent = bg
+            Instance.new("UICorner", knob).CornerRadius = UDim.new(0,3)
+
+            local enabled = default
+            local function setState(s)
+                enabled = s
+                TweenService:Create(bg, TweenInfo.new(0.25), {BackgroundColor3 = s and C.Green or C.BackgroundMid}):Play()
+                TweenService:Create(knob, TweenInfo.new(0.25, Enum.EasingStyle.Back), {Position = s and UDim2.new(1,-17,0.5,-7) or UDim2.new(0,3,0.5,-7)}):Play()
+                callback(s)
+            end
+
+            frame.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    setState(not enabled)
+                end
+            end)
+
+            return setState
+        end
+
+        function tab:AddSlider(text, min, max, default, callback)
+            local frame = Instance.new("Frame")
+            frame.Size = UDim2.new(1,-10,0,48)
+            frame.Position = UDim2.new(0,5,0,0)
+            frame.BackgroundColor3 = C.BackgroundLight
+            frame.BackgroundTransparency = 0.5
+            frame.BorderSizePixel = 0
+            frame.Parent = tabContent
+            Instance.new("UICorner", frame).CornerRadius = UDim.new(0,8)
+
+            local label = Instance.new("TextLabel")
+            label.Size = UDim2.new(0.5,0,0,18)
+            label.Position = UDim2.new(0,10,0,6)
+            label.BackgroundTransparency = 1
+            label.Text = text
+            label.TextColor3 = C.Text
+            label.TextSize = 11
+            label.Font = Enum.Font.Arcade
+            label.TextXAlignment = Enum.TextXAlignment.Left
+            label.Parent = frame
+
+            local valueLabel = Instance.new("TextLabel")
+            valueLabel.Size = UDim2.new(0.2,0,0,18)
+            valueLabel.Position = UDim2.new(0.8,-8,0,6)
+            valueLabel.BackgroundTransparency = 1
+            valueLabel.Text = tostring(default)
+            valueLabel.TextColor3 = C.DashColor
+            valueLabel.TextSize = 11
+            valueLabel.Font = Enum.Font.Arcade
+            valueLabel.TextXAlignment = Enum.TextXAlignment.Right
+            valueLabel.Parent = frame
+
+            local sliderBg = Instance.new("Frame")
+            sliderBg.Size = UDim2.new(1,-18,0,8)
+            sliderBg.Position = UDim2.new(0,9,0,34)
+            sliderBg.BackgroundColor3 = Color3.fromRGB(40,35,50)
+            sliderBg.BorderSizePixel = 0
+            sliderBg.Parent = frame
+            Instance.new("UICorner", sliderBg).CornerRadius = UDim.new(0,4)
+
+            local fill = Instance.new("Frame")
+            fill.Size = UDim2.new((default-min)/(max-min),0,1,0)
+            fill.BackgroundColor3 = C.DashColor
+            fill.BorderSizePixel = 0
+            fill.Parent = sliderBg
+            Instance.new("UICorner", fill).CornerRadius = UDim.new(0,4)
+
+            local knob = Instance.new("Frame")
+            knob.Size = UDim2.new(0,13,0,13)
+            knob.Position = UDim2.new((default-min)/(max-min),-6,0.5,-6)
+            knob.BackgroundColor3 = C.Text
+            knob.BorderSizePixel = 0
+            knob.Parent = sliderBg
+            Instance.new("UICorner", knob).CornerRadius = UDim.new(0,3)
+
+            local dragging = false
+            local function update(input)
+                local pos = math.clamp((input.Position.X - sliderBg.AbsolutePosition.X) / sliderBg.AbsoluteSize.X, 0, 1)
+                local val = math.floor(min + (max - min) * pos)
+                valueLabel.Text = tostring(val)
+                fill.Size = UDim2.new(pos,0,1,0)
+                knob.Position = UDim2.new(pos,-6,0.5,-6)
+                callback(val)
+            end
+
+            sliderBg.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    dragging = true
+                    update(input)
+                end
+            end)
+            knob.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    dragging = true
+                end
+            end)
+            UserInputService.InputChanged:Connect(function(input)
+                if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+                    update(input)
+                end
+            end)
+            UserInputService.InputEnded:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    dragging = false
+                end
+            end)
+
+            return function(val)
+                val = math.clamp(val, min, max)
+                local pos = (val-min)/(max-min)
+                valueLabel.Text = tostring(val)
+                fill.Size = UDim2.new(pos,0,1,0)
+                knob.Position = UDim2.new(pos,-6,0.5,-6)
+            end
+        end
+
+        function tab:AddLabel(text)
+            local label = Instance.new("TextLabel")
+            label.Size = UDim2.new(1,-10,0,24)
+            label.Position = UDim2.new(0,5,0,0)
+            label.BackgroundTransparency = 1
+            label.Text = text
+            label.TextColor3 = C.TextDim
+            label.TextSize = 10
+            label.Font = Enum.Font.Arcade
+            label.Parent = tabContent
+            return label
+        end
+
+        function tab:AddDropdown(text, options, default, callback)
+            local frame = Instance.new("Frame")
+            frame.Size = UDim2.new(1,-10,0,40)
+            frame.Position = UDim2.new(0,5,0,0)
+            frame.BackgroundColor3 = C.BackgroundLight
+            frame.BackgroundTransparency = 0.5
+            frame.BorderSizePixel = 0
+            frame.Parent = tabContent
+            Instance.new("UICorner", frame).CornerRadius = UDim.new(0,8)
+
+            local label = Instance.new("TextLabel")
+            label.Size = UDim2.new(0.6,0,1,0)
+            label.Position = UDim2.new(0,10,0,0)
+            label.BackgroundTransparency = 1
+            label.Text = text
+            label.TextColor3 = C.Text
+            label.TextSize = 11
+            label.Font = Enum.Font.Arcade
+            label.TextXAlignment = Enum.TextXAlignment.Left
+            label.Parent = frame
+
+            local dropdown = Instance.new("TextButton")
+            dropdown.Size = UDim2.new(0,100,0,26)
+            dropdown.Position = UDim2.new(1,-110,0.5,-13)
+            dropdown.BackgroundColor3 = C.BackgroundMid
+            dropdown.BackgroundTransparency = 0.3
+            dropdown.Text = default or options[1] or ""
+            dropdown.TextColor3 = C.Text
+            dropdown.TextSize = 10
+            dropdown.Font = Enum.Font.Arcade
+            dropdown.BorderSizePixel = 0
+            dropdown.Parent = frame
+            Instance.new("UICorner", dropdown).CornerRadius = UDim.new(0,5)
+
+            local expanded = false
+            local listFrame = Instance.new("Frame")
+            listFrame.Size = UDim2.new(0,100,0,0)
+            listFrame.Position = UDim2.new(1,-110,1,4)
+            listFrame.BackgroundColor3 = C.BackgroundMid
+            listFrame.BackgroundTransparency = 0.6
+            listFrame.BorderSizePixel = 0
+            listFrame.ClipsDescendants = true
+            listFrame.ZIndex = 10
+            listFrame.Parent = frame
+            Instance.new("UICorner", listFrame).CornerRadius = UDim.new(0,5)
+
+            local listLayout = Instance.new("UIListLayout")
+            listLayout.Padding = UDim.new(0,2)
+            listLayout.Parent = listFrame
+
+            for _, opt in ipairs(options) do
+                local btn = Instance.new("TextButton")
+                btn.Size = UDim2.new(1,0,0,24)
+                btn.BackgroundColor3 = C.BackgroundMid
+                btn.BackgroundTransparency = 0.3
+                btn.Text = opt
+                btn.TextColor3 = C.Text
+                btn.TextSize = 10
+                btn.Font = Enum.Font.Arcade
+                btn.BorderSizePixel = 0
+                btn.Parent = listFrame
+                btn.MouseButton1Click:Connect(function()
+                    dropdown.Text = opt
+                    callback(opt)
+                    expanded = false
+                    listFrame.Size = UDim2.new(0,100,0,0)
+                end)
+            end
+
+            dropdown.MouseButton1Click:Connect(function()
+                expanded = not expanded
+                listFrame.Size = expanded and UDim2.new(0,100,0, #options*26+4) or UDim2.new(0,100,0,0)
+            end)
+
+            return dropdown
+        end
+
+        return tab
+    end
+
+    return window
+end
+
+return GUI
