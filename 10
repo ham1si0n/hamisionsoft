@@ -1,19 +1,22 @@
 -- =====================================================
---  Hamision Features 
+--  Hamision Features – подключает GUI и регистрирует функции
+--  Ссылка на GUI-библиотеку: https://raw.githubusercontent.com/ham1si0n/hamisionsoft/refs/heads/main/GUI.lua
 -- =====================================================
 
-local GUI = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/твой-аккаунт/Hamision-GUI/main/GUI.lua"))()
+local GUI = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/ham1si0n/hamisionsoft/refs/heads/main/GUI.lua"))()
+if not GUI then error("Не удалось загрузить GUI-библиотеку") end
 
 -- === ГЛОБАЛЬНЫЕ СЕРВИСЫ ===
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
+local Lighting = game:GetService("Lighting")
 local Camera = Workspace.CurrentCamera
 local player = Players.LocalPlayer
 local character, humanoid, rootPart
 
--- === СОСТОЯНИЕ (все настройки) ===
+-- === СОСТОЯНИЕ ===
 local State = {
     flyEnabled = false,
     flySpeed = 150,
@@ -42,7 +45,6 @@ local State = {
     autoSpeedEnabled = false,
     autoJumpEnabled = false,
     autoJumpInterval = 1,
-    -- ... остальные
 }
 
 -- === ОБНОВЛЕНИЕ ПЕРСОНАЖА ===
@@ -127,9 +129,7 @@ local function ToggleNoclip(enabled)
     end
 end
 
--- ---- ESP (полный код из твоего скрипта) ----
--- Здесь вставь все функции ESP: CreateESP, RemoveESP, RefreshESP, UpdateESP, CreateChams и т.д.
--- Так как код огромный, я дам заглушку, но ты можешь скопировать свои функции сюда.
+-- ---- ESP (заглушка – вставь свой код) ----
 local ESP = {
     objects = {},
     settings = {
@@ -153,11 +153,11 @@ local ESP = {
         glowColor = Color3.fromRGB(255,255,255),
     }
 }
-function ESP.Refresh() end  -- заглушка
+function ESP.Refresh() end
 function ESP.Toggle(enabled) State.espEnabled = enabled; ESP.Refresh() end
-function ESP.Update(dt) end -- заглушка
+function ESP.Update(dt) end
 
--- ---- AIMBOT ----
+-- ---- AIMBOT (заглушка) ----
 local Aimbot = {
     enabled = false,
     fov = 150,
@@ -171,9 +171,9 @@ local Aimbot = {
     prediction = false,
     predictAmount = 0.1,
 }
-function Aimbot.Update(dt) end -- заглушка
+function Aimbot.Update(dt) end
 
--- ---- CROSSHAIR ----
+-- ---- CROSSHAIR (заглушка) ----
 local Crosshair = {
     enabled = false,
     style = "Propeller",
@@ -343,7 +343,6 @@ local function SetAutoJumpInterval(v) State.autoJumpInterval = v end
 
 -- ===== ПРИВЯЗКА К GUI =====
 
--- Создаём главное окно
 local window = GUI:AddWindow("Hamision [UNIVERSAL]", {
     main_color = Color3.fromRGB(30,30,35),
     min_size = Vector2.new(320, 560)
@@ -388,7 +387,8 @@ espTab:AddToggle("Show Skeleton", false, function(v) ESP.settings.showSkeleton =
 espTab:AddToggle("Show Glow", false, function(v) ESP.settings.showGlow = v; ESP.Refresh() end)
 espTab:AddToggle("Team Check", false, function(v) ESP.settings.teamCheck = v; ESP.Refresh() end)
 espTab:AddToggle("Rainbow", false, function(v) ESP.settings.rainbowEnabled = v end)
--- Добавь остальные настройки ESP
+espTab:AddSlider("Text Size", 8, 20, 12, function(v) ESP.settings.textSize = v end)
+espTab:AddSlider("Max Distance", 100, 10000, 10000, function(v) ESP.settings.maxDistance = v end)
 
 -- Вкладка "Aimbot"
 local aimTab = window:AddTab("Aimbot")
@@ -408,20 +408,19 @@ chTab:AddSlider("Size", 2, 60, 3, function(v) Crosshair.size = v; Crosshair.Buil
 chTab:AddSlider("Gap", 0, 30, 3, function(v) Crosshair.gap = v; Crosshair.Build() end)
 chTab:AddSlider("Thickness", 1, 8, 1, function(v) Crosshair.thick = v; Crosshair.Build() end)
 chTab:AddSlider("Opacity", 10, 100, 100, function(v) Crosshair.opacity = v/100; Crosshair.Build() end)
--- Добавь выбор стилей
 
 -- Вкладка "Settings"
 local setTab = window:AddTab("Settings")
-setTab:AddLabel("Theme selection (click button)")
+setTab:AddLabel("Themes:")
 setTab:AddButton("Grey", function() GUI.SetTheme("Grey") end)
 setTab:AddButton("Purple", function() GUI.SetTheme("Purple") end)
--- Добавь остальные темы
+-- добавь остальные темы при желании
 
 -- ===== ОБРАБОТЧИКИ КЛАВИШ =====
 UserInputService.InputBegan:Connect(function(input, processed)
     if processed then return end
     if input.KeyCode == Enum.KeyCode.RightShift then
-        -- показать/скрыть окно (можно реализовать через window:Toggle() если добавить)
+        -- здесь можно добавить открытие/закрытие окна (пока не реализовано)
     end
     if input.KeyCode == State.flyToggleKey then
         FlyToggle()
@@ -432,7 +431,19 @@ UserInputService.InputBegan:Connect(function(input, processed)
         State.espEnabled = false
         Aimbot.enabled = false
         Crosshair.enabled = false
-        -- ... остальные
+        State.killAuraEnabled = false
+        State.massKillEnabled = false
+        State.telekillEnabled = false
+        State.spinEnabled = false
+        State.fullbrightEnabled = false
+        State.nightEnabled = false
+        State.noFogEnabled = false
+        State.flyEnabled = false; FlyStop()
+        State.antiAfkEnabled = false
+        State.fakeLagEnabled = false
+        State.autoSpeedEnabled = false
+        State.autoJumpEnabled = false
+        -- можно скрыть GUI (но проще перезагрузить)
     end
 end)
 
@@ -441,7 +452,7 @@ RunService.Heartbeat:Connect(function(dt)
     if State.espEnabled then ESP.Update(dt) end
     if Aimbot.enabled then Aimbot.Update(dt) end
     if Crosshair.enabled then Crosshair.Update(dt) end
-    -- обновление Kill Aura, Spin и т.д.
+    -- обновление Kill Aura, Spin и т.д. (можно добавить)
 end)
 
-print("Hamision Features loaded!")
+print("Hamision Features loaded successfully!")
