@@ -1,9 +1,8 @@
 -- =====================================================
---  Hamision Features – подключает GUI и регистрирует функции
---  Ссылка на GUI-библиотеку: https://raw.githubusercontent.com/ham1si0n/hamisionsoft/refs/heads/main/GUI.lua
+--  Hamision Features
 -- =====================================================
 
-local GUI = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/ham1si0n/hamisionsoft/refs/heads/main/GUI.lua"))()
+local GUI = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/ham1si0n/hamisionsoft/refs/heads/main/gui"))()
 if not GUI then error("Не удалось загрузить GUI-библиотеку") end
 
 -- === ГЛОБАЛЬНЫЕ СЕРВИСЫ ===
